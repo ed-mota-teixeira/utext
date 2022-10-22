@@ -18,12 +18,32 @@ import control.actions.RemoveNumbersAction;
 import control.actions.RemoveSpacesAction;
 import control.actions.UppercaseAction;
 import control.enums.ActionType;
-import control.enums.DestinationType;
 import control.enums.SourceType;
+import control.out.ConsoleOutput;
+import control.out.Output;
+import control.out.TextFileOutput;
 
 public class Executioner extends CommandLineParser {
 
 	private final ArrayList<Action> actions = new ArrayList<Action>();
+
+	private void saveIt(String data) {
+		Output o = null;
+
+		switch (getDestinationType()) {
+		case FILE:
+			o = new TextFileOutput();
+			break;
+		default:
+			o = new ConsoleOutput();
+		}
+
+		if (!o.send(data)) {
+			System.out.println("Error trying to output data");
+		} else {
+			System.out.println("ok.");
+		}
+	}
 
 	public void doExecute(String[] args) {
 
@@ -62,7 +82,7 @@ public class Executioner extends CommandLineParser {
 				try {
 					List<String> lines = Files.readAllLines(filePath, charset);
 					for (String line : lines) {
-						sb.append(line);
+						sb.append(line + "\n");
 					}
 				} catch (IOException ioEx) {
 					System.out.println("I/O Exception " + ioEx.getMessage());
@@ -82,40 +102,16 @@ public class Executioner extends CommandLineParser {
 			try {
 				actions.forEach((e) -> {
 					String ms = e.process(sb.toString());
-					sb.setLength(0);
-					sb.append(ms);
+					saveIt(ms);
 				});
 			} catch (Exception ex) {
 				System.out.println(ex);
 				return;
 			}
 
-			// output the result to the destination
-			if (getDestinationType() == DestinationType.FILE) {
-				String ft = "" + System.currentTimeMillis();
-				File myFile = new File(ft + ".txt");
-				try {
-					if (myFile.createNewFile()) {
-						FileWriter myWriter = new FileWriter(ft + ".txt");
-						try {
-							myWriter.write(sb.toString());
-						} catch (IOException ee) {
-							System.out.println(ee);
-						} finally {
-							myWriter.close();
-						}
-					} else {
-						System.out.println("Unable to create output the file.");
-					}
-				} catch (IOException e) {
-					e.printStackTrace();
-					System.out.println(e);
-				}
-			} else {
-				System.out.println(sb);
-			}
-
 		}
+
+		System.out.println("Done.");
 
 	}
 

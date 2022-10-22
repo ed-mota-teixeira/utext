@@ -1,5 +1,6 @@
 package control.actions;
 
+
 public class CountWordsAction implements Action {
 
 	@Override
